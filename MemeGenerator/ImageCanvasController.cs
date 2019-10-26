@@ -7,7 +7,7 @@ namespace MemeGenerator
 {
     [Register("ImageCanvasController")]
     public partial class ImageCanvasController : NSViewController, INSFilePromiseProviderDelegate, ImageCanvasDelegate
-    {
+    { 
         private ImageCanvas imageCanvas;
 
         #region Constructors

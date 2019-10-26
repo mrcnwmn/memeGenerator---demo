@@ -4,7 +4,7 @@ using Foundation;
 namespace MemeGenerator
 {
     public partial class AppDelegate : NSApplicationDelegate
-    {
+    { 
         public AppDelegate()
         {
         }

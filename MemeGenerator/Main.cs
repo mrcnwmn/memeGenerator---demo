@@ -1,6 +1,6 @@
 ﻿using AppKit;
 
-namespace MemeGenerator
+namespace MemeGenerator 
 {
     static class MainClass
     {

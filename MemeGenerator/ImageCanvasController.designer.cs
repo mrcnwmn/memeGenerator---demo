@@ -8,7 +8,7 @@ using Foundation;
 using System.CodeDom.Compiler;
 
 namespace MemeGenerator
-{
+{ 
 	partial class ImageCanvasController
 	{
 		[Outlet]

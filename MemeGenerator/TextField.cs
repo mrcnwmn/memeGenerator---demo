@@ -12,7 +12,7 @@ namespace MemeGenerator
         private NSColor defaultTextColor = NSColor.White;
 
         public TextField() : base(new CGRect(0, 0, horizontalPadding, 44))
-        {
+        { 
             Font = defaultFont;
             Alignment       = NSTextAlignment.Center;
             TextColor       = defaultTextColor;

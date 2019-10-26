@@ -10,7 +10,7 @@ namespace MemeGenerator
 {
     [Register("ViewController")]
     partial class ViewController
-    {
+    { 
         void ReleaseDesignerOutlets()
         {
         }
