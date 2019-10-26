@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15400" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15400"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="ImageCanvasController" customModule="MemeGenerator" customModuleProvider="target">
+            <connections>
+                <outlet property="imageCanvas" destination="L5Q-e5-soD" id="qYI-09-TUe"/>
+                <outlet property="imageLabel" destination="ERu-EA-Kx3" id="OCG-TP-oB5"/>
+                <outlet property="placeholderLabel" destination="8oG-bB-SMu" id="qyN-jx-aKi"/>
+                <outlet property="view" destination="c22-O7-iKe" id="pv2-u4-cbh"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="c22-O7-iKe" userLabel="Image C" customClass="ImageCanvas">
+            <rect key="frame" x="0.0" y="0.0" width="640" height="405"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="iMc-BS-14e">
+                    <rect key="frame" x="312" y="195" width="16" height="16"/>
+                </progressIndicator>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8oG-bB-SMu">
+                    <rect key="frame" x="210" y="189" width="221" height="28"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" title="Drag an image here" id="XZG-iF-ouo">
+                        <font key="font" metaFont="systemBold" size="24"/>
+                        <color key="textColor" name="placeholderTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" horizontalCompressionResistancePriority="250" verticalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="L5Q-e5-soD" userLabel="Image V">
+                    <rect key="frame" x="0.0" y="0.0" width="640" height="405"/>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="5yZ-Sq-8MH"/>
+                </imageView>
+            </subviews>
+            <constraints>
+                <constraint firstItem="8oG-bB-SMu" firstAttribute="centerY" secondItem="c22-O7-iKe" secondAttribute="centerY" id="1kJ-Yp-JL3"/>
+                <constraint firstAttribute="trailing" secondItem="L5Q-e5-soD" secondAttribute="trailing" id="CJs-pF-syI"/>
+                <constraint firstItem="8oG-bB-SMu" firstAttribute="centerX" secondItem="c22-O7-iKe" secondAttribute="centerX" id="Dm2-SS-o4M"/>
+                <constraint firstItem="L5Q-e5-soD" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" id="KeH-65-mXM"/>
+                <constraint firstItem="iMc-BS-14e" firstAttribute="centerX" secondItem="c22-O7-iKe" secondAttribute="centerX" id="LwF-Na-mit"/>
+                <constraint firstAttribute="bottom" secondItem="L5Q-e5-soD" secondAttribute="bottom" id="dRp-Uh-oNs"/>
+                <constraint firstItem="L5Q-e5-soD" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="pD1-NC-6BJ"/>
+                <constraint firstItem="iMc-BS-14e" firstAttribute="centerY" secondItem="c22-O7-iKe" secondAttribute="centerY" id="ybg-eR-bqh"/>
+            </constraints>
+            <connections>
+                <outlet property="CanvasDelegate" destination="-2" id="gix-jY-hpm"/>
+                <outlet property="imageView" destination="L5Q-e5-soD" id="Aw0-Fc-DQR"/>
+                <outlet property="progressIndicator" destination="iMc-BS-14e" id="xeH-Rv-I5s"/>
+            </connections>
+            <point key="canvasLocation" x="23" y="-129"/>
+        </customView>
+        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="ERu-EA-Kx3">
+            <rect key="frame" x="0.0" y="0.0" width="99" height="17"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="&lt;Image Label&gt;" id="DDr-7Z-BOP">
+                <font key="font" usesAppearanceFont="YES"/>
+                <color key="textColor" name="windowFrameTextColor" catalog="System" colorSpace="catalog"/>
+                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+            </textFieldCell>
+            <point key="canvasLocation" x="-170" y="78"/>
+        </textField>
+    </objects>
+</document>
