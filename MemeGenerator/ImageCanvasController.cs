@@ -74,22 +74,16 @@ namespace MemeGenerator
 
         #region NSFilePromiseProviderDelegate
 
-        /// queue used for reading and writing file promises
-        private NSOperationQueue WorkQueue
-        {
-            get
-            {
-                NSOperationQueue providerQueue = new NSOperationQueue();
-                providerQueue.QualityOfService = NSQualityOfService.UserInitiated;
-                return providerQueue;
-            }
-        }
-
         /// - Tag: ProvideOperationQueue
+        /// queue used for reading and writing file promises
         [Export("operationQueueForFilePromiseProvider:")]
         public NSOperationQueue GetOperationQueue(NSFilePromiseProvider filePromiseProvider)
         {
-            return WorkQueue;
+            NSOperationQueue providerQueue = new NSOperationQueue
+            {
+                QualityOfService = NSQualityOfService.UserInitiated
+            };
+            return providerQueue;
         }
 
         /// <summary>
