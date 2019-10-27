@@ -7,15 +7,6 @@ using Foundation;
 
 namespace MemeGenerator
 {
-    /// Delegate for handling dragging events
-    //[Protocol(Name = "ImageCanvasDelegate")] //, WrapperType = typeof(NSTextFieldDelegateWrapper))]
-    //public interface ImageCanvasDelegate
-    //{ 
-    //    NSDragOperation draggingEntered(ImageCanvas imageCanvas, NSDraggingInfo sender);
-    //    bool performDragOperation(ImageCanvas imageCanvas, NSDraggingInfo sender);
-    //    NSFilePromiseProvider pasteboardWriter(ImageCanvas imageCanvas);
-    //}
-
     [Register("ImageCanvas")]
     public partial class ImageCanvas : NSView, INSTextFieldDelegate, INSDraggingSource
     {

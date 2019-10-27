@@ -1,12 +1,11 @@
 using System;
-using System.Linq;
 using AppKit;
 using Foundation;
 
 namespace MemeGenerator
 {
     [Register("ImageCanvasController")]
-    public partial class ImageCanvasController : NSViewController, INSFilePromiseProviderDelegate //, ImageCanvasDelegate
+    public partial class ImageCanvasController : NSViewController, INSFilePromiseProviderDelegate
     { 
         private ImageCanvas imageCanvas;
 
