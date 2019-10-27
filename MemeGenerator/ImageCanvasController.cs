@@ -6,7 +6,7 @@ using Foundation;
 namespace MemeGenerator
 {
     [Register("ImageCanvasController")]
-    public partial class ImageCanvasController : NSViewController, INSFilePromiseProviderDelegate, ImageCanvasDelegate
+    public partial class ImageCanvasController : NSViewController, INSFilePromiseProviderDelegate //, ImageCanvasDelegate
     { 
         private ImageCanvas imageCanvas;
 
@@ -28,52 +28,6 @@ namespace MemeGenerator
         }
         #endregion
 
-        public string GetFileNameForDestination(NSFilePromiseProvider filePromiseProvider, string fileType)
-        {
-            return "WWDC18.jpg";
-        }
-
-        /// queue used for reading and writing file promises
-        private NSOperationQueue WorkQueue
-        {
-            get
-            {
-                NSOperationQueue providerQueue = new NSOperationQueue();
-                providerQueue.QualityOfService = NSQualityOfService.UserInitiated;
-                return providerQueue;
-            }
-        }
-
-        /// directory URL used for accepting file promises
-        private NSUrl destinationURL
-        {
-            get
-            {
-                NSFileManager fm    = new NSFileManager();
-                NSUrl destURL       = fm.GetTemporaryDirectory();
-                destURL             = destURL.Append("Drops",true);
-                NSFileManager.DefaultManager.CreateDirectory(destURL.Path, true, null);
-                return destURL;
-            }
-        }
-
-        /// updates the canvas with a given image
-        private void HandleImage(NSImage image)
-        {
-            imageCanvas.Image = image;
-            placeholderLabel.Hidden = image != null;
-            imageLabel.StringValue = imageCanvas.ImageDescription;
-        }
-
-        /// updates the canvas with a given image file
-        private void HandleFile(NSUrl url)
-        {
-            NSImage image = new NSImage(url);
-            NSOperationQueue.MainQueue.AddOperation(() => {
-                this.HandleImage(image);
-            });
-        }
-
         /// displays an error
         private void handleError(NSError error)
         {
@@ -83,11 +37,10 @@ namespace MemeGenerator
             });
         }
 
-        /// displays a progress indicator
-        private void prepareForUpdate()
+        public void UpdateDescription(string ImageDescription, bool hidden)
         {
-            imageCanvas.isLoading = true;
-            placeholderLabel.Hidden = true;
+            placeholderLabel.Hidden = hidden;
+            imageLabel.StringValue = ImageDescription;
         }
 
         // MARK: - NSViewController
@@ -119,83 +72,18 @@ namespace MemeGenerator
 
         #endregion
 
-        #region ImageCanvasDelegate
-
-        public NSDragOperation draggingEntered(ImageCanvas imageCanvas, NSDraggingInfo sender)
-        {
-            // TODO: Check that this works. Has to change behavior for C#
-            if(sender.DraggingSourceOperationMask.HasFlag(NSDragOperation.Copy))
-                return NSDragOperation.Copy;
-            //return sender.DraggingSourceOperationMask.intersection([.copy])
-            return new NSDragOperation();
-        }
-
-        public bool performDragOperation(ImageCanvas imageCanvas, NSDraggingInfo sender)
-        {
-            //Type[] supportedClasses = { typeof(NSFilePromiseReceiver), typeof(NSUrl) };
-            //NSDictionary searchOptions = new NSDictionary("urlReadingContentsConformToTypes", true,
-            //                                        "NSPasteboardURLReadingContentsConformToTypesKey", MobileCoreServices.UTType.Image);
-
-            NSPasteboard pasteBoard = sender.GetDraggingPasteboard();
-            foreach(NSPasteboardItem pbitem in pasteBoard.PasteboardItems)
-            {
-                if(pbitem.Types.Contains(NSPasteboard.NSPasteboardTypeFileUrl))
-                {
-                    HandleFile(NSUrl.FromString(pbitem.GetStringForType(NSPasteboard.NSPasteboardTypeFileUrl)));
-                }
-            }
-
-            //NSFilePromiseReceiver hi = new NSFilePromiseReceiver();
-            //GCHandle handle1 = GCHandle.Alloc(hi);
-            //IntPtr supportedClasses = (IntPtr)handle1;
-            //NSDictionary searchOptions = new NSDictionary<NSPasteboard, NSObject>();
-
-            ///// - Tag: HandleFilePromises
-            //sender.EnumerateDraggingItems(
-            //NSDraggingItemEnumerationOptions.Concurrent,
-            //View,
-            //supportedClasses,
-            //searchOptions,
-            //(NSDraggingItem draggingItem, nint idx, ref bool stop) =>
-            //{
-            //    switch(draggingItem.Item.GetType().ToString())
-            //    {
-            //        case "NSFilePromiseReceiver":
-            //            NSFilePromiseReceiver filePromiseReceiver = (NSFilePromiseReceiver)draggingItem.Item;
-            //            this.prepareForUpdate();
-            //            filePromiseReceiver.ReceivePromisedFiles(
-            //                    this.destinationURL,
-            //                    new NSDictionary(),
-            //                    workQueue,
-            //                    (NSUrl fileURL, NSError error) =>
-            //                    {
-            //                        if(error != null)
-            //                            handleError(error);
-            //                        else
-            //                            handleFile(fileURL);
-            //                    });
-            //            break;
-            //        case "NSUrl":
-            //            handleFile((NSUrl)draggingItem.Item);
-            //            break;
-            //        default: break;
-            //    }
-            //});
-            return true;
-        }
-
-        public NSFilePromiseProvider pasteboardWriter(ImageCanvas imageCanvas)
-        {
-            NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, this)
-            {
-                UserInfo = imageCanvas.snapshotItem
-            };
-            return provider;
-        }
-
-        #endregion
-
         #region NSFilePromiseProviderDelegate
+
+        /// queue used for reading and writing file promises
+        private NSOperationQueue WorkQueue
+        {
+            get
+            {
+                NSOperationQueue providerQueue = new NSOperationQueue();
+                providerQueue.QualityOfService = NSQualityOfService.UserInitiated;
+                return providerQueue;
+            }
+        }
 
         /// - Tag: ProvideOperationQueue
         [Export("operationQueueForFilePromiseProvider:")]
@@ -221,6 +109,11 @@ namespace MemeGenerator
                     throw new Exception(); // TODO: just thow a file not found exception
                 completionHandler(null);
             });
+        }
+
+        public string GetFileNameForDestination(NSFilePromiseProvider filePromiseProvider, string fileType)
+        {
+            return "WWDC18.jpg";
         }
 
         #endregion

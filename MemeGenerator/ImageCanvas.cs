@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AppKit;
 using CoreGraphics;
 using Foundation;
@@ -7,22 +8,23 @@ using Foundation;
 namespace MemeGenerator
 {
     /// Delegate for handling dragging events
-    [Protocol(Name = "ImageCanvasDelegate")] //, WrapperType = typeof(NSTextFieldDelegateWrapper))]
-    public interface ImageCanvasDelegate
-    { 
-        NSDragOperation draggingEntered(ImageCanvas imageCanvas, NSDraggingInfo sender);
-        bool performDragOperation(ImageCanvas imageCanvas, NSDraggingInfo sender);
-        NSFilePromiseProvider pasteboardWriter(ImageCanvas imageCanvas);
-    }
+    //[Protocol(Name = "ImageCanvasDelegate")] //, WrapperType = typeof(NSTextFieldDelegateWrapper))]
+    //public interface ImageCanvasDelegate
+    //{ 
+    //    NSDragOperation draggingEntered(ImageCanvas imageCanvas, NSDraggingInfo sender);
+    //    bool performDragOperation(ImageCanvas imageCanvas, NSDraggingInfo sender);
+    //    NSFilePromiseProvider pasteboardWriter(ImageCanvas imageCanvas);
+    //}
 
     [Register("ImageCanvas")]
     public partial class ImageCanvas : NSView, INSTextFieldDelegate, INSDraggingSource
     {
-        private float dragThreshold = 3.0f;
+        private readonly float dragThreshold = 3.0f;
+        private readonly List<TextField> textFields = new List<TextField>();
         private CGPoint dragOriginOffset = CGPoint.Empty;
         private CGSize imagePixelSize = CGSize.Empty;
         private NSView overlay;
-        private List <TextField> textFields = new List<TextField>();
+
         private bool highlighted;
         private bool loading;
 
@@ -162,8 +164,6 @@ namespace MemeGenerator
                 return new SnapshotItem(Image, imagePixelSize, drawingItems, drawingScale);
             }
         }
-
-        //    @IBOutlet weak var delegate: ImageCanvasDelegate?
 
         [Export("awakeFromNib")]
         public override void AwakeFromNib()
@@ -330,7 +330,11 @@ namespace MemeGenerator
                         stop = true;
                         if(CanvasDelegate is ImageCanvasController cdelegate)
                         {
-                            NSDraggingItem[] draggingItems = { new NSDraggingItem(cdelegate.pasteboardWriter(this)) };
+                            NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, cdelegate)
+                            {
+                                UserInfo = snapshotItem
+                            };
+                            NSDraggingItem[] draggingItems = { new NSDraggingItem(provider) };
                             draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
                             BeginDraggingSession(draggingItems, evt, this);
                         }
@@ -381,11 +385,30 @@ namespace MemeGenerator
         #region NSDraggingSource
 
         // BUGBUG: This method doesn't exist in Xamarin:
-        public NSDragOperation draggingSession(NSDraggingSession session, NSDraggingContext context)
+        public NSDragOperation DraggingSession(NSDraggingSession session, NSDraggingContext context)
         {
             return (context == NSDraggingContext.OutsideApplication) ? NSDragOperation.Copy : NSDragOperation.None;
         }
         #endregion
+
+        /// updates the canvas with a given image
+        private void HandleImage(NSImage image)
+        {
+            Image = image;
+            if(CanvasDelegate is ImageCanvasController localdelegate)
+            {
+                localdelegate.UpdateDescription(ImageDescription, image != null);
+            }
+        }
+
+        /// updates the canvas with a given image file
+        private void HandleFile(NSUrl url)
+        {
+            NSImage image = new NSImage(url);
+            NSOperationQueue.MainQueue.AddOperation(() => {
+                this.HandleImage(image);
+            });
+        }
 
         #region NSDraggingDestination
 
@@ -395,15 +418,83 @@ namespace MemeGenerator
             if(CanvasDelegate is ImageCanvasController localdelegate)
             {
                 IsHighlighted = true;
-                return localdelegate.draggingEntered(this, sender);
+
+                // TODO: Check that this works. Has to change behavior for C#
+                if(sender.DraggingSourceOperationMask.HasFlag(NSDragOperation.Copy))
+                    return NSDragOperation.Copy;
+                //return sender.DraggingSourceOperationMask.intersection([.copy])
+                return new NSDragOperation();
             }
             return new NSDragOperation();
+        }
+
+        /// directory URL used for accepting file promises
+        private NSUrl destinationURL
+        {
+            get
+            {
+                NSFileManager fm = new NSFileManager();
+                NSUrl destURL = fm.GetTemporaryDirectory();
+                destURL = destURL.Append("Drops", true);
+                NSFileManager.DefaultManager.CreateDirectory(destURL.Path, true, null);
+                return destURL;
+            }
         }
 
         [Export("performDragOperation:")]
         public override bool PerformDragOperation(NSDraggingInfo sender)
         {
-            return CanvasDelegate?.performDragOperation(this, sender) ?? true;
+            //return CanvasDelegate?.performDragOperation(this, sender) ?? true;
+            //Type[] supportedClasses = { typeof(NSFilePromiseReceiver), typeof(NSUrl) };
+            //NSDictionary searchOptions = new NSDictionary("urlReadingContentsConformToTypes", true,
+            //                                        "NSPasteboardURLReadingContentsConformToTypesKey", MobileCoreServices.UTType.Image);
+
+            NSPasteboard pasteBoard = sender.GetDraggingPasteboard();
+            foreach(NSPasteboardItem pbitem in pasteBoard.PasteboardItems)
+            {
+                if(pbitem.Types.Contains(NSPasteboard.NSPasteboardTypeFileUrl))
+                {
+                    HandleFile(NSUrl.FromString(pbitem.GetStringForType(NSPasteboard.NSPasteboardTypeFileUrl)));
+                }
+            }
+
+            //NSFilePromiseReceiver hi = new NSFilePromiseReceiver();
+            //GCHandle handle1 = GCHandle.Alloc(hi);
+            //IntPtr supportedClasses = (IntPtr)handle1;
+            //NSDictionary searchOptions = new NSDictionary<NSPasteboard, NSObject>();
+
+            ///// - Tag: HandleFilePromises
+            //sender.EnumerateDraggingItems(
+            //NSDraggingItemEnumerationOptions.Concurrent,
+            //View,
+            //supportedClasses,
+            //searchOptions,
+            //(NSDraggingItem draggingItem, nint idx, ref bool stop) =>
+            //{
+            //    switch(draggingItem.Item.GetType().ToString())
+            //    {
+            //        case "NSFilePromiseReceiver":
+            //            NSFilePromiseReceiver filePromiseReceiver = (NSFilePromiseReceiver)draggingItem.Item;
+            //            this.prepareForUpdate();
+            //            filePromiseReceiver.ReceivePromisedFiles(
+            //                    this.destinationURL,
+            //                    new NSDictionary(),
+            //                    workQueue,
+            //                    (NSUrl fileURL, NSError error) =>
+            //                    {
+            //                        if(error != null)
+            //                            handleError(error);
+            //                        else
+            //                            handleFile(fileURL);
+            //                    });
+            //            break;
+            //        case "NSUrl":
+            //            handleFile((NSUrl)draggingItem.Item);
+            //            break;
+            //        default: break;
+            //    }
+            //});
+            return true;
         }
 
         [Export("draggingExited:")]
