@@ -20,15 +20,8 @@ namespace MemeGenerator
 
         public override NSObject RepresentedObject
         {
-            get
-            {
-                return base.RepresentedObject;
-            }
-            set
-            {
-                base.RepresentedObject = value;
-                // Update the view, if already loaded.
-            }
+            get => base.RepresentedObject;
+            set => base.RepresentedObject = value;      // Update the view, if already loaded.
         }
     }
 }

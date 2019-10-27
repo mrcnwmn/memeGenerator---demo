@@ -61,7 +61,7 @@ namespace MemeGenerator
                 this.drawingScale = drawingScale;
             }
 
-            private bool drawingHandler(CGRect dstRect)
+            private bool DrawingHandler(CGRect dstRect)
             {
                 baseImage.Draw(dstRect);
                 NSAffineTransform transform = new NSAffineTransform();
@@ -71,11 +71,11 @@ namespace MemeGenerator
                 return true;
             }
 
-            public NSData jpegRepresentation
+            public NSData JpegRepresentation
             {
                 get
                 {
-                    NSImage outputImage = NSImage.ImageWithSize(pixelSize, false, drawingHandler);
+                    NSImage outputImage = NSImage.ImageWithSize(pixelSize, false, DrawingHandler);
                     NSData tiffData = outputImage.AsTiff();
                     NSBitmapImageRep bitmapImageRep = new NSBitmapImageRep(tiffData);
                     return bitmapImageRep.RepresentationUsingTypeProperties(NSBitmapImageFileType.Jpeg, new NSDictionary());
@@ -83,12 +83,9 @@ namespace MemeGenerator
             }
         }
 
-        public bool isHighlighted
+        private bool IsHighlighted
         {
-            get
-            {
-                return highlighted;
-            }
+            get => highlighted;
             set
             {
                 highlighted = value;
@@ -98,10 +95,7 @@ namespace MemeGenerator
 
         public bool isLoading
         {
-            get
-            {
-                return loading;
-            }
+            get => loading;
             set
             {
                 loading = value;
@@ -114,7 +108,7 @@ namespace MemeGenerator
             }
         }
 
-        public NSImage image
+        public NSImage Image
         {
             set
             {
@@ -133,27 +127,26 @@ namespace MemeGenerator
             }
         }
 
-        public string imageDescription
+        public string ImageDescription
         {
             get
             {
-                return (image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
+                return (Image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
             }
         }
 
-        public NSImage draggingImage
+        private NSImage DraggingImage
         {
             get
             {
                 CGRect targetRect = overlay.Frame;
-                image = new NSImage(targetRect.Size);
-                NSBitmapImageRep imageRep = BitmapImageRepForCachingDisplayInRect(targetRect);
-                if(imageRep != null)
+                Image = new NSImage(targetRect.Size);
+                if(BitmapImageRepForCachingDisplayInRect(targetRect) is NSBitmapImageRep imageRep)
                 {
                     CacheDisplay(targetRect, imageRep);
-                    image.AddRepresentation(imageRep);
+                    Image.AddRepresentation(imageRep);
                 }
-                return image;
+                return Image;
             }
         }
 
@@ -161,12 +154,12 @@ namespace MemeGenerator
         {
             get
             {
-                NSImage newimage = this.image;
+                NSImage newimage = this.Image;
                 if(newimage == null) return null;
                 TextField.DrawingItem drawingItems = (textFields.Count>0)? textFields[0].drawingItem() : new TextField.DrawingItem();
                 nfloat drawingScale = imagePixelSize.Width / overlay.Frame.Width;
 
-                return new SnapshotItem(image, imagePixelSize, drawingItems, drawingScale);
+                return new SnapshotItem(Image, imagePixelSize, drawingItems, drawingScale);
             }
         }
 
@@ -182,14 +175,15 @@ namespace MemeGenerator
             AddSubview(overlay);
         }
 
-        public void addTextField()
+        public void AddTextField()
         {
             TextField textField = new TextField();
             textFields.Add(textField);
             overlay.AddSubview(textField);
             textField.Delegate = this;
             textField.centerInSuperview();
-            textField.makeFirstResponder();
+
+            textField.Window?.MakeFirstResponder(this);
         }
 
         partial void delete(NSMenuItem sender)
@@ -204,15 +198,15 @@ namespace MemeGenerator
             //}
         }
 
-        private CGRect rectForDrawingImage(CGSize imageSize, NSImageScale scaling)
+        private CGRect RectForDrawingImage(CGSize imageSize, NSImageScale scaling)
         {
             CGRect drawingRect = new CGRect(CGPoint.Empty, imageSize);
             CGRect containerRect = Bounds;
+
             if(imageSize.Width > 0 && imageSize.Height > 0)
             {
                 return drawingRect;
             }
-
 
             CGSize scaledSizeToFitFrame()
             {
@@ -248,7 +242,7 @@ namespace MemeGenerator
             return drawingRect;
         }
 
-        private CGRect constrainRectCenterToBounds(CGRect rect) {
+        private CGRect ConstrainRectCenterToBounds(CGRect rect) {
             CGRect result = rect;
             CGPoint center = new CGPoint(rect.GetMidX(), rect.GetMidY());
             if (center.X < 0.0)
@@ -266,7 +260,7 @@ namespace MemeGenerator
             return BackingAlignedRect(result, NSAlignmentOptions.AllEdgesNearest);
         }
 
-        // MARK: - NSView
+        #region NSView
 
         public override NSView HitTest(CGPoint aPoint)
         {
@@ -287,7 +281,7 @@ namespace MemeGenerator
             {
                 if(hitView == atextField)
                 {
-                    atextField.isSelected = true;
+                    atextField.IsSelected = true;
                     break;
                 }
             }
@@ -302,7 +296,7 @@ namespace MemeGenerator
 
                 if(theEvent.ClickCount == 2)
                 {
-                    textField.isSelected = false;
+                    textField.IsSelected = false;
                     Window?.MakeFirstResponder(textField);
                 }
                 else
@@ -316,11 +310,11 @@ namespace MemeGenerator
                         }
                         CGPoint movedLocation = ConvertPointFromView(evt.LocationInWindow, null);
                         CGPoint MovedOrigin = new CGPoint(movedLocation.X - dragOriginOffset.X, movedLocation.Y - dragOriginOffset.Y);
-                        textField.Frame = constrainRectCenterToBounds(new CGRect(MovedOrigin, textFrame.Size));
+                        textField.Frame = ConstrainRectCenterToBounds(new CGRect(MovedOrigin, textFrame.Size));
                     });
                 }
             }
-            else if(image != null)
+            else if(Image != null)
             {
                 // drag the flattened image
                 Window?.TrackEventsMatching(eventMask, timeout, "NSEventTrackingRunLoopMode", (NSEvent evt, ref bool stop) =>
@@ -334,11 +328,10 @@ namespace MemeGenerator
                     if(Math.Abs(movedLocation.X - location.Y) > dragThreshold || Math.Abs(movedLocation.Y - location.Y) > dragThreshold)
                     {
                         stop = true;
-                        ImageCanvasController cdelegate = CanvasDelegate;
-                        if(cdelegate != null)
+                        if(CanvasDelegate is ImageCanvasController cdelegate)
                         {
                             NSDraggingItem[] draggingItems = { new NSDraggingItem(cdelegate.pasteboardWriter(this)) };
-                            draggingItems[0].SetDraggingFrame(overlay.Frame, draggingImage);
+                            draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
                             BeginDraggingSession(draggingItems, evt, this);
                         }
                     }
@@ -349,8 +342,8 @@ namespace MemeGenerator
         public override void Layout()
         {
             base.Layout();
-            CGSize imageSize = image?.Size ?? CGSize.Empty;
-            overlay.Frame = rectForDrawingImage(imageSize, imageView.ImageScaling);
+            CGSize imageSize = Image?.Size ?? CGSize.Empty;
+            overlay.Frame = RectForDrawingImage(imageSize, imageView.ImageScaling);
         }
 
         [Export("drawRect:")]
@@ -358,7 +351,7 @@ namespace MemeGenerator
         {
             base.DrawRect(dirtyRect);
 
-            if(isHighlighted)
+            if(IsHighlighted)
             {
                 NSGraphicsContext.GlobalSaveGraphicsState();
                 NSGraphics.SetFocusRingStyle(NSFocusRingPlacement.RingOnly);
@@ -373,7 +366,9 @@ namespace MemeGenerator
             return true;
         }
 
-        // MARK: - NSTextViewDelegate
+        #endregion
+
+        #region NSTextViewDelegate
 
         [Export("controlTextDidEndEditing:")]
         public void EditingEnded(NSNotification notification)
@@ -381,23 +376,25 @@ namespace MemeGenerator
             Window?.MakeFirstResponder(this);
         }
 
-        // MARK: - NSDraggingSource
+        #endregion
 
-            // BUGBUG: This method doesn't exist in Xamarin:
+        #region NSDraggingSource
+
+        // BUGBUG: This method doesn't exist in Xamarin:
         public NSDragOperation draggingSession(NSDraggingSession session, NSDraggingContext context)
         {
             return (context == NSDraggingContext.OutsideApplication) ? NSDragOperation.Copy : NSDragOperation.None;
         }
+        #endregion
 
-        // MARK: - NSDraggingDestination
+        #region NSDraggingDestination
 
         [Export("draggingEntered:")]
         public override NSDragOperation DraggingEntered(NSDraggingInfo sender)
         {
-            ImageCanvasController localdelegate = CanvasDelegate;
-            if(localdelegate != null)
+            if(CanvasDelegate is ImageCanvasController localdelegate)
             {
-                isHighlighted = true;
+                IsHighlighted = true;
                 return localdelegate.draggingEntered(this, sender);
             }
             return new NSDragOperation();
@@ -412,13 +409,15 @@ namespace MemeGenerator
         [Export("draggingExited:")]
         public override void DraggingExited(NSDraggingInfo sender)
         {
-            isHighlighted = false;
+            IsHighlighted = false;
         }
 
         [Export("draggingEnded:")]
         public override void DraggingEnded(NSDraggingInfo sender)
         {
-            isHighlighted = false;
+            IsHighlighted = false;
         }
+
+        #endregion
     }
 }

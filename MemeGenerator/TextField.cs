@@ -8,13 +8,13 @@ namespace MemeGenerator
     public class TextField : NSTextField
     {
         private static readonly float horizontalPadding = 16.0f;
-        private NSFont defaultFont = NSFont.BoldSystemFontOfSize(36);
-        private NSColor defaultTextColor = NSColor.White;
-        bool Selected;
+        private static readonly NSFont defaultFont = NSFont.BoldSystemFontOfSize(36);
+        private static readonly NSColor defaultTextColor = NSColor.White;
+        private bool Selected;
 
         public TextField() : base(new CGRect(0, 0, horizontalPadding, 44))
         { 
-            Font = defaultFont;
+            Font            = defaultFont;
             Alignment       = NSTextAlignment.Center;
             TextColor       = defaultTextColor;
             BackgroundColor = NSColor.Clear;
@@ -24,7 +24,7 @@ namespace MemeGenerator
                                 NSViewResizingMask.MaxXMargin |
                                 NSViewResizingMask.MinYMargin |
                                 NSViewResizingMask.MaxYMargin;
-            isSelected      = false;
+            IsSelected      = false;
         }
 
         public TextField(NSCoder coder)
@@ -46,8 +46,9 @@ namespace MemeGenerator
             }
         }
 
-        public bool isSelected {
-            get { return Selected; }
+        public bool IsSelected
+        {
+            get => Selected;
             set
             {
                 Selected = value;
@@ -85,14 +86,9 @@ namespace MemeGenerator
         }
 
         /// changes the width keeping the center point fixed
-        void setFrameWidth(float width)
+        private void SetFrameWidth(float width)
         {
             Frame = BackingAlignedRect(Frame.Inset(((Frame.Width - width) * 0.5f), 0f), NSAlignmentOptions.AllEdgesNearest);
-        }
-
-        public bool makeFirstResponder()
-        {
-            return (Window != null) && Window.MakeFirstResponder(this);
         }
 
         #region NSTextField
@@ -100,12 +96,11 @@ namespace MemeGenerator
         [Export("textDidChange:")]
         public override void DidChange(NSNotification notification)
         {
-            NSTextView editor = Window?.FieldEditor(false, this) as NSTextView;
-            if (editor != null)
+            if(Window?.FieldEditor(false, this) is NSTextView editor)
             {
                 System.nfloat? newWidth = editor.TextStorage?.Size.Width;
                 if(newWidth != null)
-                    setFrameWidth((float)newWidth + horizontalPadding);
+                    SetFrameWidth((float)newWidth + horizontalPadding);
             }
         }
         #endregion

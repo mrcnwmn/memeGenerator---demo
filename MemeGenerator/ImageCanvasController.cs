@@ -34,7 +34,7 @@ namespace MemeGenerator
         }
 
         /// queue used for reading and writing file promises
-        private NSOperationQueue workQueue
+        private NSOperationQueue WorkQueue
         {
             get
             {
@@ -49,28 +49,28 @@ namespace MemeGenerator
         {
             get
             {
-                NSFileManager fm = new NSFileManager();
-                NSUrl destURL = fm.GetTemporaryDirectory();
-                destURL = destURL.Append("Drops",true);
+                NSFileManager fm    = new NSFileManager();
+                NSUrl destURL       = fm.GetTemporaryDirectory();
+                destURL             = destURL.Append("Drops",true);
                 NSFileManager.DefaultManager.CreateDirectory(destURL.Path, true, null);
                 return destURL;
             }
         }
 
         /// updates the canvas with a given image
-        private void handleImage(NSImage image)
+        private void HandleImage(NSImage image)
         {
-            imageCanvas.image = image;
-            placeholderLabel.Hidden = (image != null);
-            imageLabel.StringValue = imageCanvas.imageDescription;
+            imageCanvas.Image = image;
+            placeholderLabel.Hidden = image != null;
+            imageLabel.StringValue = imageCanvas.ImageDescription;
         }
 
         /// updates the canvas with a given image file
-        private void handleFile(NSUrl url)
+        private void HandleFile(NSUrl url)
         {
             NSImage image = new NSImage(url);
             NSOperationQueue.MainQueue.AddOperation(() => {
-                this.handleImage(image);
+                this.HandleImage(image);
             });
         }
 
@@ -110,13 +110,16 @@ namespace MemeGenerator
         }
 
         // MARK: - Actions
+        #region Actions
 
         partial void addText(NSToolbarItem sender)
         {
-            imageCanvas.addTextField();
+            imageCanvas.AddTextField();
         }
 
-        // MARK: - ImageCanvasDelegate
+        #endregion
+
+        #region ImageCanvasDelegate
 
         public NSDragOperation draggingEntered(ImageCanvas imageCanvas, NSDraggingInfo sender)
         {
@@ -138,7 +141,7 @@ namespace MemeGenerator
             {
                 if(pbitem.Types.Contains(NSPasteboard.NSPasteboardTypeFileUrl))
                 {
-                    handleFile(NSUrl.FromString(pbitem.GetStringForType(NSPasteboard.NSPasteboardTypeFileUrl)));
+                    HandleFile(NSUrl.FromString(pbitem.GetStringForType(NSPasteboard.NSPasteboardTypeFileUrl)));
                 }
             }
 
@@ -183,37 +186,23 @@ namespace MemeGenerator
 
         public NSFilePromiseProvider pasteboardWriter(ImageCanvas imageCanvas)
         {
-            NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, this);
-            provider.UserInfo = imageCanvas.snapshotItem;
+            NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, this)
+            {
+                UserInfo = imageCanvas.snapshotItem
+            };
             return provider;
         }
 
-        // MARK: - NSFilePromiseProviderDelegate
+        #endregion
 
-        /// - Tag: ProvideFileName
-        //public String filePromiseProvider(NSFilePromiseProvider filePromiseProvider, String fileType)
-        //{
-        //    return "WWDC18.jpg";
-        //}
+        #region NSFilePromiseProviderDelegate
 
         /// - Tag: ProvideOperationQueue
         [Export("operationQueueForFilePromiseProvider:")]
         public NSOperationQueue GetOperationQueue(NSFilePromiseProvider filePromiseProvider)
         {
-            return workQueue;
+            return WorkQueue;
         }
-        
-        /// - Tag: PerformFileWriting
-        ///
-        //public void filePromiseProvider(NSFilePromiseProvider filePromiseProvider, NSUrl url, Action<NSError> completionHandler)
-        //{
-        //    ImageCanvas.SnapshotItem snapshot = filePromiseProvider.UserInfo as ImageCanvas.SnapshotItem;
-        //    if(snapshot != null)
-        //        snapshot.jpegRepresentation.Save(url, true);
-        //    else
-        //        throw new Exception(); // TODO: just thow a file not found exception
-        //    completionHandler(null);
-        //}
 
         /// <summary>
         /// Not on the UI thread
@@ -226,13 +215,14 @@ namespace MemeGenerator
         {
             InvokeOnMainThread(() =>
             {
-                ImageCanvas.SnapshotItem snapshot = filePromiseProvider.UserInfo as ImageCanvas.SnapshotItem;
-                if(snapshot != null)
-                    snapshot.jpegRepresentation.Save(url, true);
+                if(filePromiseProvider.UserInfo is ImageCanvas.SnapshotItem snapshot)
+                    snapshot.JpegRepresentation.Save(url, true);
                 else
                     throw new Exception(); // TODO: just thow a file not found exception
                 completionHandler(null);
             });
         }
+
+        #endregion
     }
 }
