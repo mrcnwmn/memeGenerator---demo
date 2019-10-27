@@ -192,14 +192,17 @@ namespace MemeGenerator
             textField.makeFirstResponder();
         }
 
-        //@IBAction func delete(_ sender: Any?)
-        //{
-        //    if let textField = selectedTextField, let index = textFields.index(of: textField) {
-        //        textFields.remove(at: index)
-        //            selectedTextField?.removeFromSuperview()
-        //            selectedTextField = nil
-        //        }
-        //}
+        partial void delete(NSMenuItem sender)
+        {
+            //textField = selectedTextField;
+            //index = textFields.index(textField);
+            //if(textField != null && index != null)
+            //{
+            //    textFields.remove(index);
+            //    selectedTextField?.removeFromSuperview();
+            //    selectedTextField = null;
+            //}
+        }
 
         private CGRect rectForDrawingImage(CGSize imageSize, NSImageScale scaling)
         {

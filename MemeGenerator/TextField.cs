@@ -10,6 +10,7 @@ namespace MemeGenerator
         private static readonly float horizontalPadding = 16.0f;
         private NSFont defaultFont = NSFont.BoldSystemFontOfSize(36);
         private NSColor defaultTextColor = NSColor.White;
+        bool Selected;
 
         public TextField() : base(new CGRect(0, 0, horizontalPadding, 44))
         { 
@@ -46,14 +47,14 @@ namespace MemeGenerator
         }
 
         public bool isSelected {
-            get { return isSelected; }
+            get { return Selected; }
             set
             {
-                isSelected = value;
+                Selected = value;
                 if(Layer != null)
                 {
-                    Layer.BorderColor = (isSelected) ? NSColor.SecondarySelectedControl.CGColor : null;
-                    Layer.BorderWidth = (isSelected) ? 1.0f : 0.0f;
+                    Layer.BorderColor = (Selected) ? NSColor.SecondarySelectedControl.CGColor : null;
+                    Layer.BorderWidth = (Selected) ? 1.0f : 0.0f;
                 }
             }
         }

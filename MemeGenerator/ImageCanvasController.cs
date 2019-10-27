@@ -111,10 +111,10 @@ namespace MemeGenerator
 
         // MARK: - Actions
 
-        //    @IBAction func addText(_ sender: AnyObject)
-        //    {
-        //        imageCanvas.addTextField()
-        //    }
+        partial void addText(NSToolbarItem sender)
+        {
+            imageCanvas.addTextField();
+        }
 
         // MARK: - ImageCanvasDelegate
 

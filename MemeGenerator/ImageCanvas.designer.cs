@@ -20,10 +20,10 @@ namespace MemeGenerator
 		[Outlet]
 		AppKit.NSProgressIndicator progressIndicator { get; set; }
 
-		[Action ("delete:")]
-		partial void delete (Foundation.NSObject sender);
-		
-		void ReleaseDesignerOutlets ()
+        [Action("delete:")]
+        partial void delete(AppKit.NSMenuItem sender);
+
+        void ReleaseDesignerOutlets ()
 		{
 			if (imageView != null) {
 				imageView.Dispose ();

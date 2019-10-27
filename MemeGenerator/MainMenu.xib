@@ -5,7 +5,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15400"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
-    <objects> 
+    <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
             <connections>
                 <outlet property="delegate" destination="Voe-Tx-rLC" id="GzC-gU-4Uq"/>
@@ -171,7 +171,7 @@ CA
 </string>
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="delete:" target="-1" id="0Mk-Ml-PaM"/>
+                                    <action selector="delete:" target="-1" id="bxk-SU-7qc"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Select All" keyEquivalent="a" id="Ruw-6m-B2m">
@@ -720,6 +720,9 @@ CA
                                 <font key="font" metaFont="system"/>
                             </buttonCell>
                         </button>
+                        <connections>
+                            <action selector="addText:" target="-1" id="a6T-Mu-snV"/>
+                        </connections>
                     </toolbarItem>
                 </allowedToolbarItems>
                 <defaultToolbarItems>

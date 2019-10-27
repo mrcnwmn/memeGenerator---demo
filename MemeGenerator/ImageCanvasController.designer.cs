@@ -16,8 +16,11 @@ namespace MemeGenerator
 
 		[Outlet]
 		AppKit.NSTextField placeholderLabel { get; set; }
-		
-		void ReleaseDesignerOutlets ()
+
+        [Action("addText:")]
+        partial void addText(AppKit.NSToolbarItem sender);
+
+        void ReleaseDesignerOutlets ()
 		{
 			if (imageLabel != null) {
 				imageLabel.Dispose ();
