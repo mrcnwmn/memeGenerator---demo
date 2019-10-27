@@ -90,6 +90,7 @@
     <Compile Include="ImageCanvasController.designer.cs">
       <DependentUpon>ImageCanvasController.cs</DependentUpon>
     </Compile>
+    <Compile Include="SnapshotItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainMenu.xib" />

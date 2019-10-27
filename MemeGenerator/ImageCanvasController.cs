@@ -96,7 +96,7 @@ namespace MemeGenerator
         {
             InvokeOnMainThread(() =>
             {
-                if(filePromiseProvider.UserInfo is ImageCanvas.SnapshotItem snapshot)
+                if(filePromiseProvider.UserInfo is SnapshotItem snapshot)
                     snapshot.JpegRepresentation.Save(url, true);
                 else
                     throw new Exception(); // TODO: just thow a file not found exception

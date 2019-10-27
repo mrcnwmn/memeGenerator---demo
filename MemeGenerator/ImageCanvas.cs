@@ -10,7 +10,8 @@ namespace MemeGenerator
     [Register("ImageCanvas")]
     public partial class ImageCanvas : NSView, INSTextFieldDelegate, INSDraggingSource
     {
-        private readonly float dragThreshold = 3.0f;
+        private static readonly float dragThreshold = 3.0f;
+        private static readonly double timeout = 1.7976931348623157E+308;
         private readonly List<TextField> textFields = new List<TextField>();
         private CGPoint dragOriginOffset = CGPoint.Empty;
         private CGSize imagePixelSize = CGSize.Empty;
@@ -37,45 +38,6 @@ namespace MemeGenerator
         }
         #endregion
 
-
-        /// Used to represent the content of the canvas and render a flattened image
-        public class SnapshotItem : NSObject
-        {
-            NSImage baseImage;
-            CGSize pixelSize;
-            TextField.DrawingItem drawingItems;
-            nfloat drawingScale;
-
-            public SnapshotItem(NSImage baseImage, CGSize pixelSize, TextField.DrawingItem drawingItems, nfloat drawingScale)
-            {
-                this.baseImage = baseImage;
-                this.pixelSize = pixelSize;
-                this.drawingItems = drawingItems;
-                this.drawingScale = drawingScale;
-            }
-
-            private bool DrawingHandler(CGRect dstRect)
-            {
-                baseImage.Draw(dstRect);
-                NSAffineTransform transform = new NSAffineTransform();
-                transform.Scale(this.drawingScale);
-                transform.Concat();
-                drawingItems.draw();
-                return true;
-            }
-
-            public NSData JpegRepresentation
-            {
-                get
-                {
-                    NSImage outputImage = NSImage.ImageWithSize(pixelSize, false, DrawingHandler);
-                    NSData tiffData = outputImage.AsTiff();
-                    NSBitmapImageRep bitmapImageRep = new NSBitmapImageRep(tiffData);
-                    return bitmapImageRep.RepresentationUsingTypeProperties(NSBitmapImageFileType.Jpeg, new NSDictionary());
-                }
-            }
-        }
-
         private bool IsHighlighted
         {
             get => highlighted;
@@ -86,19 +48,15 @@ namespace MemeGenerator
             }
         }
 
-        public bool isLoading
+        private void Loading(bool value)
         {
-            get => loading;
-            set
-            {
-                loading = value;
-                imageView.Enabled = !loading;
-                progressIndicator.Hidden = !loading;
-                if (loading)
-                    progressIndicator.StartAnimation(null);
-                else
-                    progressIndicator.StopAnimation(null);
-            }
+            loading = value;
+            imageView.Enabled = !loading;
+            progressIndicator.Hidden = !loading;
+            if (loading)
+                progressIndicator.StartAnimation(null);
+            else
+                progressIndicator.StopAnimation(null);
         }
 
         public NSImage Image
@@ -109,7 +67,7 @@ namespace MemeGenerator
                 NSImageRep[] imageReps = value.Representations();
                 if(imageReps.Length > 0)
                     imagePixelSize = new CGSize(imageReps[0].PixelsWide, imageReps[0].PixelsHigh);
-                isLoading = false;
+                Loading(false);
                 NeedsLayout = true;
             }
             get
@@ -278,7 +236,7 @@ namespace MemeGenerator
             }
 
             NSEventMask eventMask = NSEventMask.LeftMouseUp | NSEventMask.LeftMouseDragged;
-            double timeout = 1.7976931348623157E+308;
+            
             if(hitView is TextField textField)
             {
                 // drag the text field
