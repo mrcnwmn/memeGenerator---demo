@@ -20,8 +20,8 @@ namespace MemeGenerator
 		[Outlet]
 		AppKit.NSProgressIndicator progressIndicator { get; set; }
 
-        [Action("delete:")]
-        partial void delete(AppKit.NSMenuItem sender);
+        [Action("Delete:")]
+        partial void Delete(AppKit.NSMenuItem sender);
 
         void ReleaseDesignerOutlets ()
 		{

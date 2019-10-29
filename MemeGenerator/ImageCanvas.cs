@@ -78,14 +78,6 @@ namespace MemeGenerator
             }
         }
 
-        public string ImageDescription
-        {
-            get
-            {
-                return (Image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
-            }
-        }
-
         private NSImage DraggingImage
         {
             get
@@ -98,19 +90,6 @@ namespace MemeGenerator
                     Image.AddRepresentation(imageRep);
                 }
                 return Image;
-            }
-        }
-
-        public SnapshotItem snapshotItem
-        {
-            get
-            {
-                NSImage newimage = this.Image;
-                if(newimage == null) return null;
-                TextField.DrawingItem drawingItems = (textFields.Count>0)? textFields[0].drawingItem() : new TextField.DrawingItem();
-                nfloat drawingScale = imagePixelSize.Width / overlay.Frame.Width;
-
-                return new SnapshotItem(Image, imagePixelSize, drawingItems, drawingScale);
             }
         }
 
@@ -135,7 +114,7 @@ namespace MemeGenerator
             textField.Window?.MakeFirstResponder(this);
         }
 
-        partial void delete(NSMenuItem sender)
+        partial void Delete(NSMenuItem sender)
         {
             //textField = selectedTextField;
             //index = textFields.index(textField);
@@ -281,7 +260,7 @@ namespace MemeGenerator
                         {
                             NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, cdelegate)
                             {
-                                UserInfo = snapshotItem
+                                UserInfo = new SnapshotItem(Image, textFields, imagePixelSize, imagePixelSize.Width / overlay.Frame.Width)
                             };
                             NSDraggingItem[] draggingItems = { new NSDraggingItem(provider) };
                             draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
@@ -338,25 +317,33 @@ namespace MemeGenerator
         {
             return (context == NSDraggingContext.OutsideApplication) ? NSDragOperation.Copy : NSDragOperation.None;
         }
-        #endregion
 
-        /// updates the canvas with a given image
-        private void HandleImage(NSImage image)
-        {
-            Image = image;
-            if(CanvasDelegate is ImageCanvasController localdelegate)
-            {
-                localdelegate.UpdateDescription(ImageDescription, image != null);
-            }
-        }
+        #endregion
 
         /// updates the canvas with a given image file
         private void HandleFile(NSUrl url)
         {
-            NSImage image = new NSImage(url);
             NSOperationQueue.MainQueue.AddOperation(() => {
-                this.HandleImage(image);
+                Image = new NSImage(url);
+                if(CanvasDelegate is ImageCanvasController localdelegate)
+                {
+                    string desc = (Image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
+                    localdelegate.UpdateDescription(desc, Image != null);
+                }
             });
+        }
+
+        /// directory URL used for accepting file promises
+        private NSUrl DestinationURL
+        {
+            get
+            {
+                NSFileManager fm = new NSFileManager();
+                NSUrl destURL = fm.GetTemporaryDirectory();
+                destURL = destURL.Append("Drops", true);
+                NSFileManager.DefaultManager.CreateDirectory(destURL.Path, true, null);
+                return destURL;
+            }
         }
 
         #region NSDraggingDestination
@@ -375,19 +362,6 @@ namespace MemeGenerator
                 return new NSDragOperation();
             }
             return new NSDragOperation();
-        }
-
-        /// directory URL used for accepting file promises
-        private NSUrl destinationURL
-        {
-            get
-            {
-                NSFileManager fm = new NSFileManager();
-                NSUrl destURL = fm.GetTemporaryDirectory();
-                destURL = destURL.Append("Drops", true);
-                NSFileManager.DefaultManager.CreateDirectory(destURL.Path, true, null);
-                return destURL;
-            }
         }
 
         [Export("performDragOperation:")]
@@ -426,7 +400,7 @@ namespace MemeGenerator
             //            NSFilePromiseReceiver filePromiseReceiver = (NSFilePromiseReceiver)draggingItem.Item;
             //            this.prepareForUpdate();
             //            filePromiseReceiver.ReceivePromisedFiles(
-            //                    this.destinationURL,
+            //                    this.DestinationURL,
             //                    new NSDictionary(),
             //                    workQueue,
             //                    (NSUrl fileURL, NSError error) =>

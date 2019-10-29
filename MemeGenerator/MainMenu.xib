@@ -171,7 +171,7 @@ CA
 </string>
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="delete:" target="-1" id="bxk-SU-7qc"/>
+                                    <action selector="Delete:" target="-1" id="bxk-SU-7qc"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Select All" keyEquivalent="a" id="Ruw-6m-B2m">
@@ -721,7 +721,7 @@ CA
                             </buttonCell>
                         </button>
                         <connections>
-                            <action selector="addText:" target="-1" id="a6T-Mu-snV"/>
+                            <action selector="AddText:" target="-1" id="PN2-hs-P9W"/>
                         </connections>
                     </toolbarItem>
                 </allowedToolbarItems>

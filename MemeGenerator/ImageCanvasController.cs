@@ -28,7 +28,7 @@ namespace MemeGenerator
         #endregion
 
         /// displays an error
-        private void handleError(NSError error)
+        private void HandleError(NSError error)
         {
             NSOperationQueue.MainQueue.AddOperation( () => {
                 NSWindow window = this.View.Window;
@@ -42,7 +42,7 @@ namespace MemeGenerator
             imageLabel.StringValue = ImageDescription;
         }
 
-        // MARK: - NSViewController
+        #region - NSViewController
 
         [Export("awakeFromNib")]
         public override void AwakeFromNib()
@@ -61,10 +61,11 @@ namespace MemeGenerator
             View.RegisterForDraggedTypes(new string[] {NSPasteboard.NSPasteboardTypeFileUrl});
         }
 
-        // MARK: - Actions
+        #endregion
+
         #region Actions
 
-        partial void addText(NSToolbarItem sender)
+        partial void AddText(NSToolbarItem sender)
         {
             imageCanvas.AddTextField();
         }
