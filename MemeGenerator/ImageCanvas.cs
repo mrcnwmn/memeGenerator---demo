@@ -16,7 +16,6 @@ namespace MemeGenerator
         private CGPoint dragOriginOffset = CGPoint.Empty;
         private CGSize imagePixelSize = CGSize.Empty;
         private NSView overlay;
-
         private bool highlighted;
         private bool loading;
 
@@ -285,11 +284,11 @@ namespace MemeGenerator
 
             if(IsHighlighted)
             {
-                NSGraphicsContext.GlobalSaveGraphicsState();
+                NSGraphicsContext current = NSGraphicsContext.CurrentContext;
+                current.SaveGraphicsState();
                 NSGraphics.SetFocusRingStyle(NSFocusRingPlacement.RingOnly);
-                Bounds.Inset(2, 2); //.Fill();
-                
-                NSGraphicsContext.GlobalRestoreGraphicsState();
+                current.CGContext.FillRect(Bounds.Inset(2, 2));
+                current.RestoreGraphicsState();
             }
         }
 
@@ -351,17 +350,12 @@ namespace MemeGenerator
         [Export("draggingEntered:")]
         public override NSDragOperation DraggingEntered(NSDraggingInfo sender)
         {
-            if(CanvasDelegate is ImageCanvasController localdelegate)
-            {
-                IsHighlighted = true;
+            IsHighlighted = true;
 
-                // TODO: Check that this works. Has to change behavior for C#
-                if(sender.DraggingSourceOperationMask.HasFlag(NSDragOperation.Copy))
-                    return NSDragOperation.Copy;
-                //return sender.DraggingSourceOperationMask.intersection([.copy])
-                return new NSDragOperation();
-            }
-            return new NSDragOperation();
+            if(sender.DraggingSourceOperationMask.HasFlag(NSDragOperation.Copy))
+                return NSDragOperation.Copy;
+
+            return NSDragOperation.None;
         }
 
         [Export("performDragOperation:")]

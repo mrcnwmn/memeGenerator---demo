@@ -72,7 +72,7 @@ namespace MemeGenerator
 
         #endregion
 
-        #region NSFilePromiseProviderDelegate
+        #region INSFilePromiseProviderDelegate
 
         /// - Tag: ProvideOperationQueue
         /// queue used for reading and writing file promises
