@@ -15,6 +15,7 @@ namespace MemeGenerator
         private readonly List<TextField> textFields = new List<TextField>();
         private CGPoint dragOriginOffset = CGPoint.Empty;
         private CGSize imagePixelSize = CGSize.Empty;
+        private TextField selectedTextField;
         private NSView overlay;
         private bool highlighted;
         private bool loading;
@@ -82,13 +83,13 @@ namespace MemeGenerator
             get
             {
                 CGRect targetRect = overlay.Frame;
-                Image = new NSImage(targetRect.Size);
+                NSImage image = new NSImage(targetRect.Size);
                 if(BitmapImageRepForCachingDisplayInRect(targetRect) is NSBitmapImageRep imageRep)
                 {
                     CacheDisplay(targetRect, imageRep);
-                    Image.AddRepresentation(imageRep);
+                    image.AddRepresentation(imageRep);
                 }
-                return Image;
+                return image;
             }
         }
 
@@ -115,14 +116,12 @@ namespace MemeGenerator
 
         partial void Delete(NSMenuItem sender)
         {
-            //textField = selectedTextField;
-            //index = textFields.index(textField);
-            //if(textField != null && index != null)
-            //{
-            //    textFields.remove(index);
-            //    selectedTextField?.removeFromSuperview();
-            //    selectedTextField = null;
-            //}
+            if(selectedTextField != null)
+            {
+                if(textFields.Remove(selectedTextField))
+                    selectedTextField.RemoveFromSuperview();
+                selectedTextField = null;
+            }
         }
 
         private CGRect RectForDrawingImage(CGSize imageSize, NSImageScale scaling)
@@ -192,7 +191,8 @@ namespace MemeGenerator
         public override NSView HitTest(CGPoint aPoint)
         {
             NSView ahitView = base.HitTest(aPoint);
-            // catching all mouse events except when editing text
+
+            // Catch all mouse events except when editing text
             if (ahitView != Window?.FieldEditor(false, null))
                 ahitView = this;
 
@@ -201,30 +201,22 @@ namespace MemeGenerator
 
         public override void MouseDown(NSEvent theEvent)
         {
-            CGPoint location = ConvertPointFromView(theEvent.LocationInWindow, null);
-            CGPoint hitPoint = ConvertPointFromView(location, Superview);
-            NSView hitView = base.HitTest(hitPoint);
-            foreach (TextField atextField in textFields)
-            {
-                if(hitView == atextField)
-                {
-                    atextField.IsSelected = true;
-                    break;
-                }
-            }
+            CGPoint location        = ConvertPointFromView(theEvent.LocationInWindow, null);
+            NSView hitView          = base.HitTest(ConvertPointFromView(location, Superview));
+            NSEventMask eventMask   = NSEventMask.LeftMouseUp | NSEventMask.LeftMouseDragged;
+            selectedTextField       = textFields.Find(txt => txt.Equals(hitView));
 
-            NSEventMask eventMask = NSEventMask.LeftMouseUp | NSEventMask.LeftMouseDragged;
-            
-            if(hitView is TextField textField)
+            if(selectedTextField != null)
             {
+                selectedTextField.IsSelected = true;
                 // drag the text field
-                CGRect textFrame = textField.Frame;
+                CGRect textFrame = selectedTextField.Frame;
                 dragOriginOffset = new CGPoint(location.X - textFrame.GetMinX(), location.Y - textFrame.GetMinY());
 
                 if(theEvent.ClickCount == 2)
                 {
-                    textField.IsSelected = false;
-                    Window?.MakeFirstResponder(textField);
+                    selectedTextField.IsSelected = false;
+                    Window?.MakeFirstResponder(selectedTextField);
                 }
                 else
                 {
@@ -237,7 +229,7 @@ namespace MemeGenerator
                         }
                         CGPoint movedLocation = ConvertPointFromView(evt.LocationInWindow, null);
                         CGPoint MovedOrigin = new CGPoint(movedLocation.X - dragOriginOffset.X, movedLocation.Y - dragOriginOffset.Y);
-                        textField.Frame = ConstrainRectCenterToBounds(new CGRect(MovedOrigin, textFrame.Size));
+                        selectedTextField.Frame = ConstrainRectCenterToBounds(new CGRect(MovedOrigin, textFrame.Size));
                     });
                 }
             }
@@ -255,16 +247,13 @@ namespace MemeGenerator
                     if(Math.Abs(movedLocation.X - location.Y) > dragThreshold || Math.Abs(movedLocation.Y - location.Y) > dragThreshold)
                     {
                         stop = true;
-                        if(CanvasDelegate is ImageCanvasController cdelegate)
+                        NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, CanvasDelegate)
                         {
-                            NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, cdelegate)
-                            {
-                                UserInfo = new SnapshotItem(Image, textFields, imagePixelSize, imagePixelSize.Width / overlay.Frame.Width)
-                            };
-                            NSDraggingItem[] draggingItems = { new NSDraggingItem(provider) };
-                            draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
-                            BeginDraggingSession(draggingItems, evt, this);
-                        }
+                            UserInfo = new SnapshotItem(Image, textFields, imagePixelSize, imagePixelSize.Width / overlay.Frame.Width)
+                        };
+                        NSDraggingItem[] draggingItems = { new NSDraggingItem(provider) };
+                        draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
+                        NSDraggingSession ds = BeginDraggingSession(draggingItems, evt, this);
                     }
                 });
             }
@@ -309,26 +298,14 @@ namespace MemeGenerator
 
         #endregion
 
-        #region NSDraggingSource
-
-        // BUGBUG: This method doesn't exist in Xamarin:
-        public NSDragOperation DraggingSession(NSDraggingSession session, NSDraggingContext context)
-        {
-            return (context == NSDraggingContext.OutsideApplication) ? NSDragOperation.Copy : NSDragOperation.None;
-        }
-
-        #endregion
-
         /// updates the canvas with a given image file
         private void HandleFile(NSUrl url)
         {
             NSOperationQueue.MainQueue.AddOperation(() => {
                 Image = new NSImage(url);
-                if(CanvasDelegate is ImageCanvasController localdelegate)
-                {
-                    string desc = (Image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
-                    localdelegate.UpdateDescription(desc, Image != null);
-                }
+
+                string desc = (Image != null) ? ((int)imagePixelSize.Width).ToString() + " × " + ((int)imagePixelSize.Height).ToString() : "...";
+                CanvasDelegate.UpdateDescription(desc, Image != null);
             });
         }
 
@@ -356,6 +333,14 @@ namespace MemeGenerator
                 return NSDragOperation.Copy;
 
             return NSDragOperation.None;
+        }
+
+        [Export("draggingUpdated:")]
+        public override NSDragOperation DraggingUpdated(NSDraggingInfo sender)
+        {
+            if(sender.DraggingSource == this)
+                return NSDragOperation.None;
+            return NSDragOperation.Copy;
         }
 
         [Export("performDragOperation:")]
