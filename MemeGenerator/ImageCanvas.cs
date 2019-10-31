@@ -140,12 +140,12 @@ namespace MemeGenerator
 
             CGSize scaledSizeToFitFrame()
             {
-                CGSize scaledSize = CGSize.Empty;
-                nfloat horizontalScale = containerRect.Width / imageSize.Width;
-                nfloat verticalScale = containerRect.Height / imageSize.Height;
-                float minimumScale = Math.Min((float)horizontalScale, (float)verticalScale);
-                scaledSize.Width = imageSize.Width * minimumScale;
-                scaledSize.Height = imageSize.Height * minimumScale;
+                CGSize scaledSize       = CGSize.Empty;
+                nfloat horizontalScale  = containerRect.Width / imageSize.Width;
+                nfloat verticalScale    = containerRect.Height / imageSize.Height;
+                float minimumScale      = Math.Min((float)horizontalScale, (float)verticalScale);
+                scaledSize.Width        = imageSize.Width * minimumScale;
+                scaledSize.Height       = imageSize.Height * minimumScale;
                 return scaledSize;
             }
 
@@ -241,8 +241,8 @@ namespace MemeGenerator
                             stop = true;
                             return;
                         }
-                        CGPoint movedLocation = ConvertPointFromView(evt.LocationInWindow, null);
-                        CGPoint MovedOrigin = new CGPoint(movedLocation.X - dragOriginOffset.X, movedLocation.Y - dragOriginOffset.Y);
+                        CGPoint movedLocation   = ConvertPointFromView(evt.LocationInWindow, null);
+                        CGPoint MovedOrigin     = new CGPoint(movedLocation.X - dragOriginOffset.X, movedLocation.Y - dragOriginOffset.Y);
                         selectedTextField.Frame = ConstrainRectCenterToBounds(new CGRect(MovedOrigin, textFrame.Size));
                     });
                 }
