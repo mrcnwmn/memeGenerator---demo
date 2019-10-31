@@ -105,12 +105,13 @@ namespace MemeGenerator
 
         public void AddTextField()
         {
-            TextField textField = new TextField();
+            TextField textField = new TextField()
+            {
+                Delegate = this
+            };
             textFields.Add(textField);
             overlay.AddSubview(textField);
-            textField.Delegate = this;
-            textField.centerInSuperview();
-
+            textField.CenterInSuperview();
             textField.Window?.MakeFirstResponder(this);
         }
 
@@ -129,7 +130,7 @@ namespace MemeGenerator
             CGRect drawingRect = new CGRect(CGPoint.Empty, imageSize);
             CGRect containerRect = Bounds;
 
-            if(imageSize.Width > 0 && imageSize.Height > 0)
+            if(imageSize.Width <= 0 || imageSize.Height <= 0)
             {
                 return drawingRect;
             }

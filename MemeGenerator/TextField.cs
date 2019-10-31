@@ -5,6 +5,7 @@ using Foundation;
 namespace MemeGenerator
 {
     /// Self-centering text field
+    [Register("TextField")]
     public class TextField : NSTextField
     {
         private static readonly float horizontalPadding = 16.0f;
@@ -54,8 +55,13 @@ namespace MemeGenerator
                 Selected = value;
                 if(Layer != null)
                 {
-                    Layer.BorderColor = (Selected) ? NSColor.SecondarySelectedControl.CGColor : null;
-                    Layer.BorderWidth = (Selected) ? 1.0f : 0.0f;
+                    if(Selected)
+                    {
+                        Layer.BorderColor = NSColor.SecondarySelectedControl.CGColor;
+                        Layer.BorderWidth = 1.0f;
+                    }
+                    else
+                        Layer.BorderWidth = 0.0f;
                 }
             }
         }
@@ -76,7 +82,7 @@ namespace MemeGenerator
         }
 
         /// centers the view if it has a superview
-        public void centerInSuperview()
+        internal void CenterInSuperview()
         {
             NSView superview = Superview;
             CGRect centeredFrame = Frame;
