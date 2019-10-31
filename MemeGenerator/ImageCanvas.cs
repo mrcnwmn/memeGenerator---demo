@@ -12,11 +12,10 @@ namespace MemeGenerator
     {
         private static readonly float dragThreshold = 3.0f;
         private static readonly double timeout      = 1.7976931348623157E+308;
-        private readonly List<TextField> textFields = new List<TextField>();
         private CGPoint dragOriginOffset            = CGPoint.Empty;
         private CGSize imagePixelSize               = CGSize.Empty;
         private TextField selectedTextField;
-        private NSView overlay;
+        private NSView textfieldoverlay;
         private bool highlighted;
         private bool loading;
 
@@ -82,7 +81,7 @@ namespace MemeGenerator
         {
             get
             {
-                CGRect targetRect = overlay.Frame;
+                CGRect targetRect = textfieldoverlay.Frame;
                 NSImage image = new NSImage(targetRect.Size);
                 if(BitmapImageRepForCachingDisplayInRect(targetRect) is NSBitmapImageRep imageRep)
                 {
@@ -99,27 +98,23 @@ namespace MemeGenerator
             base.AwakeFromNib();
             imageView.UnregisterDraggedTypes();
             progressIndicator.Hidden = true; // explicitly hiding the indicator in order not to catch mouse events
-            overlay = new NSView();
-            AddSubview(overlay);
+            textfieldoverlay = new NSView();
+            AddSubview(textfieldoverlay);
         }
 
         public void AddTextField()
         {
             // Remove any text fields that have no content
-            for(int x = textFields.Count - 1; x > -1; x--)
+            for(int x = textfieldoverlay.Subviews.Length - 1; x > -1; x--)
             {
-                if(string.IsNullOrEmpty(textFields[x].StringValue))
-                {
-                    textFields[x].RemoveFromSuperview();
-                    textFields.RemoveAt(x);
-                }
+                if(string.IsNullOrEmpty(((TextField)textfieldoverlay.Subviews[x]).StringValue))
+                    textfieldoverlay.Subviews[x].RemoveFromSuperview();
             }
             TextField textField = new TextField()
             {
                 Delegate = this
             };
-            textFields.Add(textField);
-            overlay.AddSubview(textField);
+            textfieldoverlay.AddSubview(textField);
             textField.CenterInSuperview();
             textField.Window?.MakeFirstResponder(this);
         }
@@ -128,8 +123,7 @@ namespace MemeGenerator
         {
             if(selectedTextField != null)
             {
-                if(textFields.Remove(selectedTextField))
-                    selectedTextField.RemoveFromSuperview();
+                selectedTextField.RemoveFromSuperview();
                 selectedTextField = null;
             }
         }
@@ -187,10 +181,10 @@ namespace MemeGenerator
             if(center.Y < 0.0)
                 result.Y = -(rect.Height * 0.5f);
 
-            if (center.X > overlay.Bounds.Width) 
+            if (center.X > textfieldoverlay.Bounds.Width) 
                 result.X = Bounds.Width - (rect.Width * 0.5f);
 
-            if (center.Y > overlay.Bounds.Height) 
+            if (center.Y > textfieldoverlay.Bounds.Height) 
                 result.Y = Bounds.Height - (rect.Height * 0.5f);
             
             return BackingAlignedRect(result, NSAlignmentOptions.AllEdgesNearest);
@@ -209,12 +203,22 @@ namespace MemeGenerator
             return ahitView;
         }
 
+        private TextField GetTextField(NSView view)
+        {
+            foreach(TextField fld in textfieldoverlay.Subviews)
+            {
+                if(fld.Equals(view))
+                    return fld;
+            }
+            return null;
+        }
+
         public override void MouseDown(NSEvent theEvent)
         {
             CGPoint location        = ConvertPointFromView(theEvent.LocationInWindow, null);
             NSView hitView          = base.HitTest(ConvertPointFromView(location, Superview));
             NSEventMask eventMask   = NSEventMask.LeftMouseUp | NSEventMask.LeftMouseDragged;
-            selectedTextField       = textFields.Find(txt => txt.Equals(hitView));
+            selectedTextField       = GetTextField(hitView);
 
             if(selectedTextField != null)
             {
@@ -259,10 +263,10 @@ namespace MemeGenerator
                         stop = true;
                         NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, CanvasDelegate)
                         {
-                            UserInfo = new SnapshotItem(Image, textFields, imagePixelSize, imagePixelSize.Width / overlay.Frame.Width)
+                            UserInfo = new SnapshotItem(Image, textfieldoverlay.Subviews, imagePixelSize, imagePixelSize.Width / textfieldoverlay.Frame.Width)
                         };
                         NSDraggingItem[] draggingItems = { new NSDraggingItem(provider) };
-                        draggingItems[0].SetDraggingFrame(overlay.Frame, DraggingImage);
+                        draggingItems[0].SetDraggingFrame(textfieldoverlay.Frame, DraggingImage);
                         NSDraggingSession ds = BeginDraggingSession(draggingItems, evt, this);
                     }
                 });
@@ -273,7 +277,7 @@ namespace MemeGenerator
         {
             base.Layout();
             CGSize imageSize = Image?.Size ?? CGSize.Empty;
-            overlay.Frame = RectForDrawingImage(imageSize, imageView.ImageScaling);
+            textfieldoverlay.Frame = RectForDrawingImage(imageSize, imageView.ImageScaling);
         }
 
         [Export("drawRect:")]
