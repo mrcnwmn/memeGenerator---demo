@@ -10,7 +10,7 @@ namespace MemeGenerator
     {
         private static readonly float horizontalPadding = 16.0f;
         private static readonly NSFont defaultFont = NSFont.BoldSystemFontOfSize(36);
-        private static readonly NSColor defaultTextColor = NSColor.White;
+        private static readonly NSColor defaultTextColor = NSColor.Red;
         private bool Selected;
 
         public TextField() : base(new CGRect(0, 0, horizontalPadding, 44))
@@ -26,6 +26,7 @@ namespace MemeGenerator
                                 NSViewResizingMask.MinYMargin |
                                 NSViewResizingMask.MaxYMargin;
             IsSelected      = false;
+            StringValue     = "X";
         }
 
         public TextField(NSCoder coder)
@@ -40,10 +41,9 @@ namespace MemeGenerator
             public NSColor color;
             public CGPoint origin;
 
-            public void draw()
+            public void Draw()
             {
-                if(font != null && color != null)
-                    text.DrawAtPoint(origin, new NSDictionary(font, color));
+                text.DrawAtPoint(origin, new NSStringAttributes{ Font = font, ForegroundColor = color });
             }
         }
 
@@ -68,8 +68,8 @@ namespace MemeGenerator
 
         public DrawingItem drawingItem()
         {
-            NSFont itemFont     = Font ?? defaultFont;
-            NSColor itemColor   = TextColor ?? defaultTextColor;
+            NSFont itemFont     = Font;
+            NSColor itemColor   = TextColor;
             CGPoint origin      = Frame.Location; // TODO: Not sure if this is correct. was "origin"
             origin.X            += horizontalPadding * 0.5f;
 
@@ -88,7 +88,7 @@ namespace MemeGenerator
             CGRect centeredFrame = Frame;
             centeredFrame.X = 0.5f * (superview.Bounds.Width - centeredFrame.Width);
             centeredFrame.Y = 0.5f * (superview.Bounds.Height - centeredFrame.Height);
-            Frame = BackingAlignedRect(centeredFrame, NSAlignmentOptions.AllEdgesNearest);
+            Frame = superview.BackingAlignedRect(centeredFrame, NSAlignmentOptions.AllEdgesNearest);
         }
 
         /// changes the width keeping the center point fixed

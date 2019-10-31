@@ -10,8 +10,8 @@ namespace MemeGenerator
     public class SnapshotItem : NSObject
     {
         private readonly NSImage BaseImage;
+        private readonly List<TextField.DrawingItem> DrawingItems = new List<TextField.DrawingItem>();
         private CGSize PixelSize;
-        private TextField.DrawingItem DrawingItems;
         private nfloat DrawingScale;
 
         public SnapshotItem(NSImage image, List<TextField> textFields, CGSize pixelSize, nfloat drawingScale)
@@ -19,16 +19,18 @@ namespace MemeGenerator
             BaseImage           = image;
             this.PixelSize      = pixelSize;
             this.DrawingScale   = drawingScale;
-            DrawingItems        = (textFields.Count > 0) ? textFields[0].drawingItem() : new TextField.DrawingItem();
+            foreach(TextField text in textFields)
+                DrawingItems.Add(text.drawingItem());
         }
 
         private bool DrawingHandler(CGRect dstRect)
         {
             BaseImage.Draw(dstRect);
             NSAffineTransform transform = new NSAffineTransform();
-            transform.Scale(this.DrawingScale);
+            transform.Scale(DrawingScale);
             transform.Concat();
-            DrawingItems.draw();
+            foreach(TextField.DrawingItem item in DrawingItems)
+                item.Draw();
             return true;
         }
 
@@ -36,8 +38,8 @@ namespace MemeGenerator
         {
             get
             {
-                NSImage outputImage = NSImage.ImageWithSize(PixelSize, false, DrawingHandler);
-                NSData tiffData = outputImage.AsTiff();
+                NSImage outputImage             = NSImage.ImageWithSize(PixelSize, false, DrawingHandler);
+                NSData tiffData                 = outputImage.AsTiff();
                 NSBitmapImageRep bitmapImageRep = new NSBitmapImageRep(tiffData);
                 return bitmapImageRep.RepresentationUsingTypeProperties(NSBitmapImageFileType.Jpeg, new NSDictionary());
             }

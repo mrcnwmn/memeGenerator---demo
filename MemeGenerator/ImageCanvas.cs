@@ -11,10 +11,10 @@ namespace MemeGenerator
     public partial class ImageCanvas : NSView, INSTextFieldDelegate, INSDraggingSource
     {
         private static readonly float dragThreshold = 3.0f;
-        private static readonly double timeout = 1.7976931348623157E+308;
+        private static readonly double timeout      = 1.7976931348623157E+308;
         private readonly List<TextField> textFields = new List<TextField>();
-        private CGPoint dragOriginOffset = CGPoint.Empty;
-        private CGSize imagePixelSize = CGSize.Empty;
+        private CGPoint dragOriginOffset            = CGPoint.Empty;
+        private CGSize imagePixelSize               = CGSize.Empty;
         private TextField selectedTextField;
         private NSView overlay;
         private bool highlighted;
@@ -105,6 +105,15 @@ namespace MemeGenerator
 
         public void AddTextField()
         {
+            // Remove any text fields that have no content
+            for(int x = textFields.Count - 1; x > -1; x--)
+            {
+                if(string.IsNullOrEmpty(textFields[x].StringValue))
+                {
+                    textFields[x].RemoveFromSuperview();
+                    textFields.RemoveAt(x);
+                }
+            }
             TextField textField = new TextField()
             {
                 Delegate = this
