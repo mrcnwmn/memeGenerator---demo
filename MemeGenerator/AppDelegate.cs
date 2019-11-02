@@ -12,10 +12,9 @@ namespace MemeGenerator
         [Export("applicationDidFinishLaunching:")]
         public override void DidFinishLaunching(NSNotification notification)
         {
-            ImageCanvasController imageCanvasController = new ImageCanvasController();
-            window.ContentViewController                = imageCanvasController;
+            window.ContentViewController                = new ImageCanvasController();
             window.TitleVisibility                      = NSWindowTitleVisibility.Hidden;
-            statusToolbarItem.View                      = imageCanvasController.imageLabel;
+            statusToolbarItem.View                      = ((ImageCanvasController)window.ContentViewController).imageLabel;
             window.MakeKeyAndOrderFront(null);
         }
 

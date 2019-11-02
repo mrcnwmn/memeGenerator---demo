@@ -18,6 +18,7 @@ namespace MemeGenerator
         private NSView textfieldoverlay;
         private bool highlighted;
         private bool loading;
+        private int itterations = 0;
 
         #region Constructors
         // Called when created from unmanaged code
@@ -258,7 +259,7 @@ namespace MemeGenerator
                         return;
                     }
                     CGPoint movedLocation = ConvertPointFromView(evt.LocationInWindow, null);
-                    if(Math.Abs(movedLocation.X - location.Y) > dragThreshold || Math.Abs(movedLocation.Y - location.Y) > dragThreshold)
+                    if(Math.Abs(movedLocation.X - location.X) > dragThreshold || Math.Abs(movedLocation.Y - location.Y) > dragThreshold)
                     {
                         stop = true;
                         NSFilePromiseProvider provider = new NSFilePromiseProvider(MobileCoreServices.UTType.JPEG, CanvasDelegate)

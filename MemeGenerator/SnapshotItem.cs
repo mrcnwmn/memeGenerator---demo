@@ -16,9 +16,9 @@ namespace MemeGenerator
 
         public SnapshotItem(NSImage image, NSView[] textFields, CGSize pixelSize, nfloat drawingScale)
         {
-            BaseImage           = image;
-            this.PixelSize      = pixelSize;
-            this.DrawingScale   = drawingScale;
+            BaseImage       = image;
+            PixelSize       = pixelSize;
+            DrawingScale    = drawingScale;
             foreach(TextField text in textFields)
                 DrawingItems.Add(text.drawingItem());
         }
