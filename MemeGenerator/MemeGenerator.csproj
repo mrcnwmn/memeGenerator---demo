@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{205D4857-43BC-4F0C-BB54-FBF44443E112}</ProjectGuid>
     <ProjectTypeGuids>{A3F8F2AB-B479-4A4A-A458-A89E7DC349F1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>MemeGenerator</RootNamespace>
     <AssemblyName>Meme Generator</AssemblyName>
     <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using AppKit;
 using CoreGraphics;
 using Foundation;
@@ -18,7 +19,6 @@ namespace MemeGenerator
         private NSView textfieldoverlay;
         private bool highlighted;
         private bool loading;
-        private int itterations = 0;
 
         #region Constructors
         // Called when created from unmanaged code
@@ -48,7 +48,7 @@ namespace MemeGenerator
             }
         }
 
-        private void Loading(bool value)
+        internal void Loading(bool value)
         {
             loading = value;
             imageView.Enabled = !loading;
@@ -337,6 +337,16 @@ namespace MemeGenerator
             }
         }
 
+        private NSOperationQueue workQueue
+        {
+            get
+            {
+                NSOperationQueue providerQueue = new NSOperationQueue();
+                providerQueue.QualityOfService = NSQualityOfService.UserInitiated;
+                return providerQueue;
+            }
+        }
+
         #region NSDraggingDestination
 
         [Export("draggingEntered:")]
@@ -361,57 +371,49 @@ namespace MemeGenerator
         [Export("performDragOperation:")]
         public override bool PerformDragOperation(NSDraggingInfo sender)
         {
-            //return CanvasDelegate?.performDragOperation(this, sender) ?? true;
-            //Type[] supportedClasses = { typeof(NSFilePromiseReceiver), typeof(NSUrl) };
+            NSArray supportedClasses = NSArray.FromIntPtrs(new IntPtr[] {
+                                                    new ObjCRuntime.Class(typeof(NSFilePromiseReceiver)).Handle,
+                                                    new ObjCRuntime.Class(typeof(NSUrl)).Handle });
             //NSDictionary searchOptions = new NSDictionary("urlReadingContentsConformToTypes", true,
             //                                        "NSPasteboardURLReadingContentsConformToTypesKey", MobileCoreServices.UTType.Image);
 
-            NSPasteboard pasteBoard = sender.GetDraggingPasteboard();
-            foreach(NSPasteboardItem pbitem in pasteBoard.PasteboardItems)
-            {
-                if(pbitem.Types.Contains(NSPasteboard.NSPasteboardTypeFileUrl))
+            /// - Tag: HandleFilePromises
+            sender.EnumerateDraggingItems(
+                NSDraggingItemEnumerationOptions.Concurrent,
+                this,
+                supportedClasses,
+                new NSDictionary(),
+                (NSDraggingItem draggingItem, nint idx, ref bool stop) =>
                 {
-                    HandleFile(NSUrl.FromString(pbitem.GetStringForType(NSPasteboard.NSPasteboardTypeFileUrl)));
-                }
-            }
-
-            //NSFilePromiseReceiver hi = new NSFilePromiseReceiver();
-            //GCHandle handle1 = GCHandle.Alloc(hi);
-            //IntPtr supportedClasses = (IntPtr)handle1;
-            //NSDictionary searchOptions = new NSDictionary<NSPasteboard, NSObject>();
-
-            ///// - Tag: HandleFilePromises
-            //sender.EnumerateDraggingItems(
-            //NSDraggingItemEnumerationOptions.Concurrent,
-            //View,
-            //supportedClasses,
-            //searchOptions,
-            //(NSDraggingItem draggingItem, nint idx, ref bool stop) =>
-            //{
-            //    switch(draggingItem.Item.GetType().ToString())
-            //    {
-            //        case "NSFilePromiseReceiver":
-            //            NSFilePromiseReceiver filePromiseReceiver = (NSFilePromiseReceiver)draggingItem.Item;
-            //            this.prepareForUpdate();
-            //            filePromiseReceiver.ReceivePromisedFiles(
-            //                    this.DestinationURL,
-            //                    new NSDictionary(),
-            //                    workQueue,
-            //                    (NSUrl fileURL, NSError error) =>
-            //                    {
-            //                        if(error != null)
-            //                            handleError(error);
-            //                        else
-            //                            handleFile(fileURL);
-            //                    });
-            //            break;
-            //        case "NSUrl":
-            //            handleFile((NSUrl)draggingItem.Item);
-            //            break;
-            //        default: break;
-            //    }
-            //});
+                    switch(draggingItem.Item.GetType().ToString())
+                    {
+                        case "AppKit.NSFilePromiseReceiver":
+                            NSFilePromiseReceiver filePromiseReceiver = (NSFilePromiseReceiver)draggingItem.Item;
+                            ((ImageCanvasController)Window.ContentViewController).prepareForUpdate();
+                            filePromiseReceiver.ReceivePromisedFiles(
+                                    this.DestinationURL,
+                                    new NSDictionary(),
+                                    workQueue,
+                                    (NSUrl fileURL, NSError error) =>
+                                    {
+                                        if(error != null)
+                                            HandleError(error);
+                                        else
+                                            HandleFile(fileURL);
+                                    });
+                            break;
+                        case "AppKit.NSUrl":
+                            HandleFile((NSUrl)draggingItem.Item);
+                            break;
+                        default: break;
+                    }
+            });
             return true;
+        }
+
+        private void HandleError(NSError error)
+        {
+            NSOperationQueue.MainQueue.AddOperation(() => PresentError(error));
         }
 
         [Export("draggingExited:")]

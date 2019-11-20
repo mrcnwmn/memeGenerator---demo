@@ -42,6 +42,13 @@ namespace MemeGenerator
             imageLabel.StringValue = ImageDescription;
         }
 
+        /// displays a progress indicator
+        public void prepareForUpdate()
+        {
+            imageCanvas.Loading(true);
+            placeholderLabel.Hidden = true;
+        }
+
         #region - NSViewController
 
         [Export("awakeFromNib")]
